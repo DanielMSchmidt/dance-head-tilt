@@ -11,10 +11,26 @@ const WEBCAM_WIDTH = 500;
 const interval = 300;
 
 class App extends React.Component {
-  setRef = webcam => {
+  setWebcamRef = webcam => {
     this.webcam = webcam;
 
-    const positions$ = positionsStream(webcam, interval);
+    if (this.image) {
+      this.start();
+      this.setState({ started: true });
+    }
+  };
+
+  setImageRef = image => {
+    this.image = image;
+
+    if (this.webcam) {
+      this.start();
+      this.setState({ started: true });
+    }
+  };
+
+  start = () => {
+    const positions$ = positionsStream(this.webcam, this.image, interval);
     positions$.subscribe(() => {
       // TODO: draw lines in image
     });
@@ -39,13 +55,12 @@ class App extends React.Component {
           audio={false}
           height={WEBCAM_HEIGHT}
           width={WEBCAM_WIDTH}
-          ref={this.setRef}
-          screenshotFormat="image/jpeg"
+          ref={this.setWebcamRef}
         />
         <img
           height={WEBCAM_HEIGHT}
           width={WEBCAM_WIDTH}
-          ref={image => (this.image = image)}
+          ref={this.setImageRef}
           id="image"
         />
       </div>

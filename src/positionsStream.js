@@ -8,12 +8,12 @@ function findPart(keypoints, name) {
   return keypoints.find(({ part }) => part === name);
 }
 
-export default function positionsStream(webcam, interval) {
+export default function positionsStream(webcam, imageRef, interval) {
   const image$ = Rx.interval(interval).pipe(
     map(() => webcam.getScreenshot()),
     filter(src => src !== null),
     tap(imageSrc => {
-      this.image.src = imageSrc;
+      imageRef.src = imageSrc;
     })
   );
 
