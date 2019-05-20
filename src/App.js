@@ -8,15 +8,24 @@ import positionsToTilt from "./positionsToTilt";
 const WEBCAM_HEIGHT = 500;
 const WEBCAM_WIDTH = 500;
 
-const interval = 300;
-
 class App extends React.Component {
+  constructor() {
+    super();
+
+    this.state = {
+      interval: 300,
+      accuracy: 0.75,
+      ready: false,
+      started: false,
+      positionSubscription: null,
+      tiltSubscription: null
+    };
+  }
   setWebcamRef = webcam => {
     this.webcam = webcam;
 
     if (this.image) {
-      this.start();
-      this.setState({ started: true });
+      this.setState({ ready: true });
     }
   };
 
@@ -24,20 +33,26 @@ class App extends React.Component {
     this.image = image;
 
     if (this.webcam) {
-      this.start();
-      this.setState({ started: true });
+      this.setState({ ready: true });
     }
   };
 
   start = () => {
-    const positions$ = positionsStream(this.webcam, this.image, interval);
-    positions$.subscribe(() => {
+    this.setState({ started: true });
+    const { accuracy, interval } = this.state;
+    const positions$ = positionsStream(
+      this.webcam,
+      this.image,
+      interval,
+      accuracy
+    );
+    const positionSubscription = positions$.subscribe(() => {
       // TODO: draw lines in image
     });
 
     const tiltDifference$ = positions$.pipe(positionsToTilt());
 
-    tiltDifference$.subscribe({
+    const tiltSubscription = tiltDifference$.subscribe({
       next({ headAxisTilt, bodyAxisTilt }) {
         console.log("Head", headAxisTilt);
         console.log("Body", bodyAxisTilt);
@@ -46,11 +61,56 @@ class App extends React.Component {
         console.error(e);
       }
     });
+
+    this.setState({ positionSubscription, tiltSubscription });
+  };
+
+  stop = () => {
+    const { positionSubscription, tiltSubscription } = this.state;
+    positionSubscription.unsubscribe();
+    tiltSubscription.unsubscribe();
+  };
+
+  restart = () => {
+    this.stop();
+    this.start();
   };
 
   render() {
     return (
       <div className="App">
+        <label htmlFor="interval">Interval: {this.state.interval}</label>
+        <input
+          id="interval"
+          onChange={event => this.setState({ interval: event.target.value })}
+          value={this.state.interval}
+          type="range"
+          min={100}
+          step={10}
+          max={2000}
+        />
+
+        <label htmlFor="accuracy">
+          Detection Accuracy {this.state.accuracy}
+        </label>
+        <input
+          id="accuracy"
+          type="range"
+          onChange={event => this.setState({ accuracy: event.target.value })}
+          value={this.state.accuracy}
+          min={0.5}
+          max={1}
+          step={0.1}
+        />
+
+        {this.state.ready ? (
+          !this.state.started ? (
+            <button onClick={this.start}>Start</button>
+          ) : (
+            <button onClick={this.restart}>Restart</button>
+          )
+        ) : null}
+
         <Webcam
           audio={false}
           height={WEBCAM_HEIGHT}

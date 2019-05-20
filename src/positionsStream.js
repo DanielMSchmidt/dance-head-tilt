@@ -2,13 +2,12 @@ import * as Rx from "rxjs";
 import { map, tap, switchMap, filter } from "rxjs/operators";
 import * as posenet from "@tensorflow-models/posenet";
 
-const model$ = Rx.from(posenet.load());
-
 function findPart(keypoints, name) {
   return keypoints.find(({ part }) => part === name);
 }
 
-export default function positionsStream(webcam, imageRef, interval) {
+export default function positionsStream(webcam, imageRef, interval, accuracy) {
+  const model$ = Rx.from(posenet.load(accuracy));
   const image$ = Rx.interval(interval).pipe(
     map(() => webcam.getScreenshot()),
     filter(src => src !== null),
