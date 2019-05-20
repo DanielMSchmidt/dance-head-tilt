@@ -6,29 +6,38 @@ function findPart(keypoints, name) {
   return keypoints.find(({ part }) => part === name);
 }
 
-export default function positionsStream(webcam, imageRef, interval, accuracy) {
+export default function positionsStream(
+  webcam,
+  imageRef,
+  canvasRef,
+  interval,
+  accuracy
+) {
   const model$ = Rx.from(posenet.load(accuracy));
   const image$ = Rx.interval(interval).pipe(
     map(() => webcam.getScreenshot()),
     filter(src => src !== null),
     tap(imageSrc => {
       imageRef.src = imageSrc;
+
+      const img = new Image();
+      img.onload = () => {
+        const context = canvasRef.getContext("2d");
+        context.drawImage(img, 0, 0);
+      };
+      img.src = imageSrc;
     })
   );
 
   return Rx.combineLatest(model$, image$).pipe(
-    switchMap(([net, _imageSrc]) => {
-      // TODO: get real aspect ratio of camera
-      // TODO: try to not use DOM
-      // const imageElement = new Image(WEBCAM_WIDTH, WEBCAM_HEIGHT);
-      // imageElement.src = imageSrc;
+    switchMap(([net]) => {
       const imageScaleFactor = 0.5;
-      const flipHorizontal = true;
+      const flipHorizontal = false;
       const outputStride = 16;
 
       return Rx.from(
         net.estimateSinglePose(
-          document.getElementById("image"),
+          imageRef,
           imageScaleFactor,
           flipHorizontal,
           outputStride
@@ -63,6 +72,30 @@ export default function positionsStream(webcam, imageRef, interval, accuracy) {
         rightEye,
         rightShoulder
       };
-    })
+    }),
+    tap(
+      ({
+        leftEar,
+        leftEye,
+        leftShoulder,
+        rightEar,
+        rightEye,
+        rightShoulder
+      }) => {
+        const ctx = canvasRef.getContext("2d");
+        ctx.clearRect(0, 0, 1000, 1000); // reset
+        function paintPart(color, left, right) {
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          ctx.moveTo(left.position.x, left.position.y);
+          ctx.lineTo(right.position.x, right.position.y);
+          ctx.stroke();
+        }
+
+        paintPart("#FF0000", leftEar, rightEar);
+        paintPart("#00FFFF", leftEye, rightEye);
+        paintPart("#000000", leftShoulder, rightShoulder);
+      }
+    )
   );
 }
