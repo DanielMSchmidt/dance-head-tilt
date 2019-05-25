@@ -73,10 +73,6 @@ class App extends React.Component {
     const tiltDifference$ = positions$.pipe(positionsToTilt());
 
     const tiltSubscription = tiltDifference$.subscribe({
-      next({ headAxisTilt, bodyAxisTilt }) {
-        console.log("Head", headAxisTilt);
-        console.log("Body", bodyAxisTilt);
-      },
       error(e) {
         console.error(e);
       }

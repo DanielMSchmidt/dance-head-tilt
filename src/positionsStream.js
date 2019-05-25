@@ -52,25 +52,31 @@ export default function positionsStream(
         leftEar,
         leftEye,
         leftShoulder,
+        leftElbow,
         rightEar,
         rightEye,
-        rightShoulder
+        rightShoulder,
+        rightElbow
       ] = [
         "leftEar",
         "leftEye",
         "leftShoulder",
+        "leftElbow",
         "rightEar",
         "rightEye",
-        "rightShoulder"
+        "rightShoulder",
+        "rightElbow"
       ].map(findThePart);
 
       return {
         leftEar,
         leftEye,
         leftShoulder,
+        leftElbow,
         rightEar,
         rightEye,
-        rightShoulder
+        rightShoulder,
+        rightElbow
       };
     }),
     tap(
@@ -78,9 +84,11 @@ export default function positionsStream(
         leftEar,
         leftEye,
         leftShoulder,
+        leftElbow,
         rightEar,
         rightEye,
-        rightShoulder
+        rightShoulder,
+        rightElbow
       }) => {
         const ctx = canvasRef.getContext("2d");
         function paintPart(color, left, right) {
@@ -91,9 +99,10 @@ export default function positionsStream(
           ctx.stroke();
         }
 
-        paintPart("#FF0000", leftEar, rightEar);
-        paintPart("#00FFFF", leftEye, rightEye);
-        paintPart("#000000", leftShoulder, rightShoulder);
+        paintPart("#ea101e", leftEar, rightEar);
+        paintPart("#41e8f4", leftEye, rightEye);
+        paintPart("#41f456", leftShoulder, rightShoulder);
+        paintPart("#f49242", leftElbow, rightElbow);
       }
     )
   );
