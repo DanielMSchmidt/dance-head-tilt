@@ -20,10 +20,10 @@ export default function positionsStream(
     tap(imageSrc => {
       imageRef.src = imageSrc;
 
-      const img = new Image();
+      const img = new Image(imageRef.width, imageRef.height);
       img.onload = () => {
-        const context = canvasRef.getContext("2d");
-        context.drawImage(img, 0, 0);
+        const ctx = canvasRef.getContext("2d");
+        ctx.drawImage(img, 0, 0, imageRef.width, imageRef.height);
       };
       img.src = imageSrc;
     })
@@ -83,7 +83,6 @@ export default function positionsStream(
         rightShoulder
       }) => {
         const ctx = canvasRef.getContext("2d");
-        ctx.clearRect(0, 0, 1000, 1000); // reset
         function paintPart(color, left, right) {
           ctx.beginPath();
           ctx.strokeStyle = color;
